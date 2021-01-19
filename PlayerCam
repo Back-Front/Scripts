@@ -1,0 +1,92 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerCam : MonoBehaviour
+{
+    //======ゲームオブジェクト宣言======
+    GameObject playerObj;
+
+    //======変数宣言======
+    //位置関係
+    Vector3 lookPos;//カメラが注視する位置
+    float lookPosHeight = 1.5f;//注視位置の高さ調整用
+    float camera_playerDistance = 2f;//プレイヤーとカメラの距離
+    //回転用
+    float pitch = 20f;//ピッチ回転（X軸）
+    int minPitch = -10, maxPitch = 40;//ピッチの最低値と最高値
+    float yaw = 0f;//ヨー回転（Y軸）
+    float X_Rotation;
+    float Y_Rotation;
+    float cameraSensitivity = 1.5f;//カメラ感度
+    //仮変数
+    //その他
+    float frameTime;//フレームの影響の解消
+
+    void Start()
+    {
+        this.playerObj = GameObject.Find("Player");
+    }
+
+    
+    void Update()
+    {
+        CameraPos();
+        CameraRot();
+    }
+
+    void CameraPos()
+    {
+        //カメラ角度決め
+        var tmpQ1 = Quaternion.Euler(pitch, yaw, 0);
+        //プレイヤー座標のlookPosHeight分上をカメラ注視の座標とする
+        lookPos = playerObj.transform.position + Vector3.up * lookPosHeight;
+        Vector3 vec = lookPos + tmpQ1 * Vector3.back * camera_playerDistance;
+        //if (WallCheck(vec))
+        //{
+        //    transform.position = wallHitPosition;
+        //}
+        //else
+        //{
+            transform.position = vec;
+        //}
+        transform.LookAt(lookPos);
+    }
+
+    /// <summary>
+    /// カメラ回転
+    /// </summary>
+    void CameraRot()
+    {
+        //フレームタイム取得
+        frameTime = Time.deltaTime * 100f;
+
+        //マウスorスティックのインプット取得
+        X_Rotation = 0;
+        Y_Rotation = 0;
+        X_Rotation += Input.GetAxis("Mouse X");
+        Y_Rotation -= Input.GetAxis("Mouse Y");
+
+            //Y軸回転
+            yaw += X_Rotation * cameraSensitivity * frameTime;
+            //X軸回転
+            pitch += Y_Rotation * cameraSensitivity * frameTime;
+            pitch = ClampPitch(pitch, minPitch, maxPitch);
+    }
+
+    /// <summary>
+    /// minPitch < pitch < maxPitchにクランプ
+    /// </summary>
+    float ClampPitch(float pitch, float min, float max)
+    {
+        if (pitch > 0)
+        {
+            pitch = Mathf.Clamp(pitch, 0, max);
+        }
+        if (pitch < 0)
+        {
+            pitch = Mathf.Clamp(pitch, min, -0.1f);
+        }
+        return pitch;
+    }
+}
